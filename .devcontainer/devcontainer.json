@@ -1,0 +1,35 @@
+{
+    "name": "IaC DevContainer",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
+    },
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "azapi-vscode.azapi",
+          "cschleiden.vscode-github-actions",
+          "davidanson.vscode-markdownlint",
+          "GitHub.copilot",
+          "GitHub.copilot-chat",
+          "github.vscode-github-actions",
+          "hashicorp.terraform",
+          "hashicorp.hcl",
+          "pkief.material-icon-theme",
+          "streetsidesoftware.code-spell-checker"
+        ],
+        "settings": {
+          "editor.tabSize": 2,
+          "terminal.integrated.defaultProfile.linux": "bash",
+          "terminal.integrated.profiles.linux": {
+            "bash": {
+              "path": "/bin/bash"
+            }
+          },
+          "workbench.iconTheme": "material-icon-theme"
+        }
+      }
+    },
+    // "postCreateCommand": "pre-commit install",
+    "features": {}
+  }
