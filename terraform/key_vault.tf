@@ -1,16 +1,10 @@
-# [Random String](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string)
-# resource "random_string" "kv_name" {
-#   length  = 4
-#   upper   = false
-#   special = false
-# }
+
 
 # [Key Vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault)
 resource "azurerm_key_vault" "kv" {
-  # name                = "kv-${var.resource_suffix}-${random_string.kv_name.id}"
-  name                = "kv-${var.resource_suffix}"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  name                = "kv-${var.resource_suffix}-${random_string.kv_name.id}"
+  location            = azurerm_resource_group.posit.location
+  resource_group_name = azurerm_resource_group.posit.name
   tags                = local.tags
 
   sku_name                  = "standard"
@@ -21,7 +15,7 @@ resource "azurerm_key_vault" "kv" {
   network_acls {
     bypass         = "AzureServices"
     default_action = "Deny"
-    ip_rules       = ["${chomp(data.http.myip.response_body)}/32", azurerm_public_ip.agent.ip_address]
+    ip_rules       = ["${chomp(data.http.myip.response_body)}/32"]
   }
 }
 

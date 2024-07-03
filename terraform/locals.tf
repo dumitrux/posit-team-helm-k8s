@@ -5,7 +5,7 @@ locals {
     {
       CreatedBy   = "Terraform"
       Environment = var.environment
-      Workload    = "Posit"
+      Workload    = "Posit-Team"
     }
   )
 }

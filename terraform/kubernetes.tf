@@ -1,8 +1,8 @@
 # [Kubernetes Cluster](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster)
 resource "azurerm_kubernetes_cluster" "aks" {
   name                = "aks-${var.resource_suffix}"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.posit.location
+  resource_group_name = azurerm_resource_group.posit.name
   tags                = local.tags
 
   dns_prefix = "aks"

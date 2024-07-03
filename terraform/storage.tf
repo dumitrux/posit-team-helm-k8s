@@ -1,8 +1,8 @@
 # [Storage Account](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account)
 resource "azurerm_storage_account" "st" {
   name                = "st${replace(var.resource_suffix, "-", "")}"
-  resource_group_name = var.resource_group_name
-  location            = var.location
+  location            = azurerm_resource_group.posit.location
+  resource_group_name = azurerm_resource_group.posit.name
   tags                = local.tags
 
   account_tier             = "Standard"
@@ -13,7 +13,7 @@ resource "azurerm_storage_account" "st" {
   network_rules {
     default_action             = "Deny"
     bypass                     = ["AzureServices"]
-    ip_rules                   = ["${chomp(data.http.myip.response_body)}", azurerm_public_ip.agent.ip_address]
+    ip_rules                   = ["${chomp(data.http.myip.response_body)}"]
     virtual_network_subnet_ids = [azurerm_subnet.workload.id, azurerm_subnet.aks.id]
   }
 }

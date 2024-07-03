@@ -7,15 +7,15 @@ data "http" "myip" {
 resource "azurerm_virtual_network" "vnet" {
   name                = "vnet-${var.resource_suffix}"
   address_space       = ["10.0.0.0/14"]
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.posit.location
+  resource_group_name = azurerm_resource_group.posit.name
   tags                = local.tags
 }
 
 # [Virtual Network Subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet)
 resource "azurerm_subnet" "aks" {
   name                 = "AKSSubnet"
-  resource_group_name  = var.resource_group_name
+  resource_group_name  = azurerm_resource_group.posit.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.0.0/16"]
 
@@ -24,7 +24,7 @@ resource "azurerm_subnet" "aks" {
 
 resource "azurerm_subnet" "workload" {
   name                 = "WorkloadSubnet"
-  resource_group_name  = var.resource_group_name
+  resource_group_name  = azurerm_resource_group.posit.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.1.0.0/25"]
 
@@ -35,14 +35,14 @@ resource "azurerm_subnet" "workload" {
 resource "azurerm_network_security_group" "workload" {
   name                = "nsg-workload-${var.resource_suffix}"
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.posit.name
   tags                = local.tags
 }
 
 resource "azurerm_network_security_group" "aks" {
   name                = "nsg-aks-${var.resource_suffix}"
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.posit.name
   tags                = local.tags
 }
 
@@ -59,7 +59,7 @@ resource "azurerm_subnet_network_security_group_association" "aks" {
 
 # [Network Security Rule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule)
 resource "azurerm_network_security_rule" "allow22" {
-  resource_group_name         = var.resource_group_name
+  resource_group_name         = azurerm_resource_group.posit.name
   network_security_group_name = azurerm_network_security_group.workload.name
 
   name                       = "SSH"
@@ -74,7 +74,7 @@ resource "azurerm_network_security_rule" "allow22" {
 }
 
 resource "azurerm_network_security_rule" "allow_http" {
-  resource_group_name         = var.resource_group_name
+  resource_group_name         = azurerm_resource_group.posit.name
   network_security_group_name = azurerm_network_security_group.aks.name
 
   name                       = "SSH"

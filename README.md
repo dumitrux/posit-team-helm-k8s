@@ -3,11 +3,13 @@
 - [Overview](#overview)
 - [References](#references)
 - [DevContainer](#devcontainer)
+- [Minikube](#minikube)
 - [Deploy infrastructure](#deploy-infrastructure)
   - [Terraform State](#terraform-state)
   - [Deployment](#deployment)
 - [Helm](#helm)
   - [Create custom Helm chart](#create-custom-helm-chart)
+  - [Create custom Helm chart MSFT Learn](#create-custom-helm-chart-msft-learn)
   - [Helm chart for Posit Team](#helm-chart-for-posit-team)
   - [Debug K8S Pod](#debug-k8s-pod)
 
@@ -33,6 +35,43 @@ Then on VSCode F1 > Dev Containers: Rebuild and Reopen in Container.
 az login --use-device-code
 ```
 
+## Minikube
+
+Download and install DOcker:
+
+```bash
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+Download and run the Minikube installer for the latest release:
+
+```bash
+sudo apt-get update
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+sudo dpkg -i minikube_latest_amd64.deb
+```
+
+Start a local cluster and run the Kubernetes Dashboard:
+
+```bash
+minikube start
+minikube dashboard
+```
+
 ## Deploy infrastructure
 
 ### Terraform State
@@ -41,7 +80,7 @@ az login --use-device-code
 ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
 ARM_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000000"
 
-RESOURCE_GROUP_NAME="rg-posi"
+TF_STATE_RESOURCE_GROUP_NAME="rg-tfstate"
 LOCATION="uksouth"
 
 RANDOM_SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 10 | head -n 1)
@@ -50,18 +89,18 @@ CONTAINER_NAME="tfstate"
 
 # Create a resource group
 az group create \
-  --name $RESOURCE_GROUP_NAME \
+  --name $TF_STATE_RESOURCE_GROUP_NAME \
   --location $LOCATION \
-  --tags CreatedBy=Dumitru Workload=Posit
+  --tags CreatedBy=dumitrux
 
 # Create a storage account
 az storage account create \
   --name $STORAGE_ACCOUNT_NAME \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --location uksouth \
+  --resource-group $TF_STATE_RESOURCE_GROUP_NAME \
+  --location $LOCATION \
   --sku Standard_LRS \
   --encryption-services blob \
-  --tags CreatedBy=Dumitru Workload=Posit
+  --tags CreatedBy=dumitrux
 
 # Retrieve public IP address using curl
 MY_IP=$(curl -s https://api.ipify.org)
@@ -69,14 +108,14 @@ MY_IP=$(curl -s https://api.ipify.org)
 # Configure the storage account firewall to allow access only from your IP address
 az storage account network-rule add \
   --account-name $STORAGE_ACCOUNT_NAME \
-  --resource-group $RESOURCE_GROUP_NAME \
+  --resource-group $TF_STATE_RESOURCE_GROUP_NAME \
   --ip-address $MY_IP \
   --action Allow
 
 # Enabled from selected virtual networks and IP addresses
 az storage account update \
   --name $STORAGE_ACCOUNT_NAME \
-  --resource-group $RESOURCE_GROUP_NAME \
+  --resource-group $TF_STATE_RESOURCE_GROUP_NAME \
   --bypass AzureServices \
   --default-action Deny \
   --https-only true \
@@ -86,7 +125,7 @@ az storage account update \
 az role assignment create \
   --role "Storage Blob Data Contributor" \
   --assignee $ARM_CLIENT_ID \
-  --scope "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
+  --scope "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/$TF_STATE_RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
 
 # Create a storage container
 az storage container create \
@@ -99,14 +138,18 @@ az storage container create \
 Environment variables in `.env`:
 
 ```ini
-ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
-ARM_CLIENT_SECRET="00000000-0000-0000-0000-000000000000"
-ARM_TENANT_ID="00000000-0000-0000-0000-000000000000"
-ARM_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000000"
-TF_STATE_RESOURCE_GROUP_NAME="rg-posit"
+# Azure Credentials
+export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
+export ARM_CLIENT_SECRET="00000000-0000-0000-0000-000000000000"
+export ARM_TENANT_ID="00000000-0000-0000-0000-000000000000"
+export ARM_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000000"
+
+# Terraform state
+LOCATION="uksouth"
+TF_STATE_RESOURCE_GROUP_NAME="rg-tfstate"
 TF_STATE_STORAGE_ACCOUNT_NAME="sttfstate"
 TF_STATE_CONTAINER_NAME="tfstate"
-TF_STATE_KEY="positteam-k8s"
+TF_STATE_KEY="posit-team-helm-k8s"
 ```
 
 ```bash
@@ -142,13 +185,33 @@ kubelogin convert-kubeconfig -l azurecli
 kubectl get deployments --all-namespaces=true
 ```
 
-### Create custom Helm chart
+### Create custom Helm chart 
+
+[Helm - Getting Started](https://helm.sh/docs/chart_template_guide/getting_started/)
+
+```bash
+mkdir helm-charts
+cd helm-charts
+
+helm create mychart
+rm -rf mychart/templates/*
+code mychart/templates/configmap.yaml
+
+helm install full-coral ./mychart
+# See the actual template that was loaded
+helm get manifest full-coral
+helm uninstall full-coral
+
+# Render and show the templates but not installing the chart
+helm install --debug --dry-run goodly-guppy ./mychart
+```
+
+### Create custom Helm chart MSFT Learn
 
 [Develop on AKS with Helm](https://learn.microsoft.com/en-us/azure/aks/quickstart-helm?tabs=azure-cli)
 [GitHub - AzureSamples/azure-voting-app-redis](https://github.com/Azure-Samples/azure-voting-app-redis)
 
 ```bash
-mkdir helm-charts
 cd helm-charts
 
 git clone https://github.com/Azure-Samples/azure-voting-app-redis.git
@@ -234,8 +297,24 @@ Posit Team:
 cd helm-charts
 helm create posit-team
 
-helm install my-posit-team posit-team/ --values=values-dev.yaml
+code posit-team/Chart.yaml
+code posit-team/values.yaml
+code posit-team/templates/deployment.yaml
+helm dependency update posit-team
 
+helm install my-posit-team posit-team/ \
+  --values=values-dev.yaml \
+  --set license.key=$POSIT_PACKAGEMANAGER_LICENSE_KEY
+
+kubectl get service posit-team --watch
+
+helm list
+kubectl get deployments --all-namespaces=true
+kubectl get pods --all-namespaces=true
+
+helm uninstall posit-team
+
+helm diff upgrade
 helm upgrade
 helm rollback
 ```

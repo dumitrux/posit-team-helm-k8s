@@ -31,8 +31,8 @@ provider "azurerm" {
 data "azurerm_client_config" "current" {}
 
 # [Resource Group](https://registry.terraform.io/providers/hashicorp/Azurerm/latest/docs/resources/resource_group)
-# resource "azurerm_resource_group" "posit" {
-#   name     = "rg-${var.resource_suffix}"
-#   location = var.location
-#   tags     = local.tags
-# }
+resource "azurerm_resource_group" "posit" {
+  name     = "rg-${var.resource_suffix}"
+  location = var.location
+  tags     = local.tags
+}

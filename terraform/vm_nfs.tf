@@ -1,8 +1,8 @@
 # [Public IP Address](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip)
 resource "azurerm_public_ip" "nfs" {
   name                = "pip-nfs-${var.resource_suffix}"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.posit.location
+  resource_group_name = azurerm_resource_group.posit.name
   tags                = local.tags
 
   allocation_method = "Static"
@@ -12,8 +12,8 @@ resource "azurerm_public_ip" "nfs" {
 # [Network Interface](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface)
 resource "azurerm_network_interface" "nfs" {
   name                = "nic-nfs-${var.resource_suffix}"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.posit.location
+  resource_group_name = azurerm_resource_group.posit.name
   tags                = local.tags
 
   ip_configuration {
@@ -27,8 +27,8 @@ resource "azurerm_network_interface" "nfs" {
 # [Linux Virtual Machine](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine)
 resource "azurerm_linux_virtual_machine" "nfs" {
   name                = "vm-nfs-workbench-${var.resource_suffix}"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.posit.location
+  resource_group_name = azurerm_resource_group.posit.name
   tags                = local.tags
 
   admin_username                  = "adminuser"
