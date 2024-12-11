@@ -1,0 +1,17 @@
+apiVersion: v2
+name: posit-team
+description: A Helm chart to deploy Posit Team in Kubernetes
+version: 0.0.1
+appVersion: "2024.07.0"
+type: application
+
+dependencies:
+  - name: rstudio-pm
+    version: 0.5.29
+    repository: https://helm.rstudio.com
+  # - name: rstudio-connect
+  #   version: 0.7.3
+  #   repository: https://helm.rstudio.com
+  # - name: rstudio-workbench
+  #   version: 0.7.6
+  #   repository: https://helm.rstudio.com

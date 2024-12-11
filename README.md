@@ -70,6 +70,14 @@ Start a local cluster and run the Kubernetes Dashboard:
 ```bash
 minikube start
 minikube dashboard
+
+minikube pause
+minikube unpause
+minikube stop
+
+minikube config set memory 9001
+minikube addons list
+minikube delete --all
 ```
 
 ## Deploy infrastructure
@@ -185,7 +193,7 @@ kubelogin convert-kubeconfig -l azurecli
 kubectl get deployments --all-namespaces=true
 ```
 
-### Create custom Helm chart 
+### Create custom Helm chart
 
 [Helm - Getting Started](https://helm.sh/docs/chart_template_guide/getting_started/)
 
@@ -204,6 +212,9 @@ helm uninstall full-coral
 
 # Render and show the templates but not installing the chart
 helm install --debug --dry-run goodly-guppy ./mychart
+
+code mychart/values.yaml
+
 ```
 
 ### Create custom Helm chart MSFT Learn
@@ -303,7 +314,7 @@ code posit-team/templates/deployment.yaml
 helm dependency update posit-team
 
 helm install my-posit-team posit-team/ \
-  --values=values-dev.yaml \
+  -f values-dev.yaml \
   --set license.key=$POSIT_PACKAGEMANAGER_LICENSE_KEY
 
 kubectl get service posit-team --watch

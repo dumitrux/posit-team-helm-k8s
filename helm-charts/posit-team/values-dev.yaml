@@ -1,0 +1,8 @@
+replicaCount: 1
+rstudio-pm:
+  service:
+    type: LoadBalancer
+
+service:
+  type: LoadBalancer
+  port: 80

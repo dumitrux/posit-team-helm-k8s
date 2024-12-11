@@ -30,3 +30,6 @@ override.tf.json
 
 # Ignore dotenv file
 .env
+
+# Ignore tmp directory
+tmp
